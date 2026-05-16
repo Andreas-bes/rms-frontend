@@ -1250,8 +1250,19 @@ function Reports() {
     }
   };
 
-  const openPdf = (url) => {
-  window.open(`${API}${url}?token=${localStorage.getItem("rms_token")}`, "_blank");
+ const openPdf = async (url) => {
+  const token = localStorage.getItem("rms_token");
+  try {
+    const res = await fetch(`${API}${url}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error("Failed to generate PDF");
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, "_blank");
+  } catch (err) {
+    toast(err.message, "error");
+  }
 };
 
   const adminReports = [

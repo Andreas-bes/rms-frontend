@@ -1251,8 +1251,8 @@ function Reports() {
   };
 
   const openPdf = (url) => {
-    window.open(`${API_BASE}${url}?token=${localStorage.getItem("token")}`, "_blank");
-  };
+  window.open(`${API}${url}?token=${localStorage.getItem("rms_token")}`, "_blank");
+};
 
   const adminReports = [
     { label: "Revenue Report", url: "/api/reports/revenue/pdf", icon: "📈" },

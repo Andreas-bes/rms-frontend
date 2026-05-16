@@ -1232,10 +1232,33 @@ function Reports() {
   const [selected, setSelected] = useState("");
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [dateModal, setDateModal] = useState(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   useEffect(() => {
     api("/api/customers/").then(setCustomers).catch(() => {});
   }, []);
+
+  const openPdf = async (url) => {
+    const token = localStorage.getItem("rms_token");
+    try {
+      const res = await fetch(`${API}${url}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to generate PDF");
+      const blob = await res.blob();
+      window.open(URL.createObjectURL(blob), "_blank");
+    } catch (err) {
+      toast(err.message, "error");
+    }
+  };
+
+  const openPdfWithDates = async () => {
+    if (!fromDate || !toDate) return;
+    await openPdf(`${dateModal.url}?from_date=${fromDate}&to_date=${toDate}`);
+    setDateModal(null);
+  };
 
   const fetchReport = async () => {
     if (!selected) return;
@@ -1250,33 +1273,29 @@ function Reports() {
     }
   };
 
- const openPdf = async (url) => {
-  const token = localStorage.getItem("rms_token");
-  try {
-    const res = await fetch(`${API}${url}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    if (!res.ok) throw new Error("Failed to generate PDF");
-    const blob = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, "_blank");
-  } catch (err) {
-    toast(err.message, "error");
-  }
-};
-
-  const adminReports = [
-    { label: "Revenue Report", url: "/api/reports/revenue/pdf", icon: "📈" },
-    { label: "Sales Overview", url: "/api/reports/sales/pdf", icon: "🧾" },
-    { label: "All Balances", url: "/api/reports/all-balances/pdf", icon: "📊" },
-  ];
-
-  const anyReports = [
-    { label: "Fleet Status", url: "/api/reports/fleet-status/pdf", icon: "🚗" },
-  ];
-
   return (
     <div>
+      {/* ── Date Modal ── */}
+      {dateModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="card" style={{ width: 400, padding: 24 }}>
+            <div className="card-title" style={{ marginBottom: 16 }}>{dateModal.label}</div>
+            <div className="field">
+              <label>From Date</label>
+              <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} />
+            </div>
+            <div className="field">
+              <label>To Date</label>
+              <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} />
+            </div>
+            <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
+              <button className="btn btn-primary" onClick={openPdfWithDates} disabled={!fromDate || !toDate}>Generate PDF</button>
+              <button className="btn btn-secondary" onClick={() => setDateModal(null)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="page-header">
         <div>
           <div className="page-heading">Reports</div>
@@ -1290,18 +1309,22 @@ function Reports() {
           <div className="card-title">PDF Reports</div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
-          {anyReports.map(r => (
-            <button key={r.url} className="btn btn-secondary" onClick={() => openPdf(r.url)}
-              style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px" }}>
-              <span>{r.icon}</span>{r.label}
-            </button>
-          ))}
-          {adminReports.map(r => (
-            <button key={r.url} className="btn btn-secondary" onClick={() => openPdf(r.url)}
-              style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px" }}>
-              <span>{r.icon}</span>{r.label}
-            </button>
-          ))}
+          <button className="btn btn-secondary" onClick={() => openPdf("/api/reports/fleet-status/pdf")}
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px" }}>
+            🚗 Fleet Status
+          </button>
+          <button className="btn btn-secondary" onClick={() => { setDateModal({ url: "/api/reports/revenue/pdf", label: "Revenue Report" }); setFromDate(""); setToDate(""); }}
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px" }}>
+            📈 Revenue Report
+          </button>
+          <button className="btn btn-secondary" onClick={() => { setDateModal({ url: "/api/reports/sales/pdf", label: "Sales Overview" }); setFromDate(""); setToDate(""); }}
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px" }}>
+            🧾 Sales Overview
+          </button>
+          <button className="btn btn-secondary" onClick={() => openPdf("/api/reports/all-balances/pdf")}
+            style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px" }}>
+            📊 All Balances
+          </button>
         </div>
       </div>
 
@@ -1366,6 +1389,7 @@ function Reports() {
       </div>
     </div>
   );
+}
 }// ── SETTINGS ─────────────────────────────────────────────────────────────────
 function Settings() {
   const [settings, setSettings] = useState(null);

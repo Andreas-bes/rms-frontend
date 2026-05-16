@@ -1250,6 +1250,20 @@ function Reports() {
     }
   };
 
+  const openPdf = (url) => {
+    window.open(`${API_BASE}${url}?token=${localStorage.getItem("token")}`, "_blank");
+  };
+
+  const adminReports = [
+    { label: "Revenue Report", url: "/api/reports/revenue/pdf", icon: "📈" },
+    { label: "Sales Overview", url: "/api/reports/sales/pdf", icon: "🧾" },
+    { label: "All Balances", url: "/api/reports/all-balances/pdf", icon: "📊" },
+  ];
+
+  const anyReports = [
+    { label: "Fleet Status", url: "/api/reports/fleet-status/pdf", icon: "🚗" },
+  ];
+
   return (
     <div>
       <div className="page-header">
@@ -1259,6 +1273,28 @@ function Reports() {
         </div>
       </div>
 
+      {/* ── PDF Reports ── */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-header">
+          <div className="card-title">PDF Reports</div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 }}>
+          {anyReports.map(r => (
+            <button key={r.url} className="btn btn-secondary" onClick={() => openPdf(r.url)}
+              style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px" }}>
+              <span>{r.icon}</span>{r.label}
+            </button>
+          ))}
+          {adminReports.map(r => (
+            <button key={r.url} className="btn btn-secondary" onClick={() => openPdf(r.url)}
+              style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 16px" }}>
+              <span>{r.icon}</span>{r.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Customer Balance Report ── */}
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-header">
           <div className="card-title">Customer Balance Report</div>
@@ -1268,12 +1304,19 @@ function Reports() {
             <label>Select Customer</label>
             <select value={selected} onChange={e => setSelected(e.target.value)}>
               <option value="">Choose a customer…</option>
-              {customers.map(c => <option key={c.id} value={c.id}>{c.customer_code} — {c.full_name}</option>)}
+              {customers.map(c => (
+                <option key={c.id} value={c.id}>{c.customer_code} — {c.full_name}</option>
+              ))}
             </select>
           </div>
           <button className="btn btn-primary" onClick={fetchReport} disabled={!selected || loading}>
             {loading ? "Loading…" : "Generate Report"}
           </button>
+          {selected && (
+            <button className="btn btn-secondary" onClick={() => openPdf(`/api/reports/customer-history/${selected}/pdf`)}>
+              📄 PDF Statement
+            </button>
+          )}
         </div>
 
         {report && (
@@ -1312,9 +1355,7 @@ function Reports() {
       </div>
     </div>
   );
-}
-
-// ── SETTINGS ─────────────────────────────────────────────────────────────────
+}// ── SETTINGS ─────────────────────────────────────────────────────────────────
 function Settings() {
   const [settings, setSettings] = useState(null);
   const [form, setForm] = useState({});

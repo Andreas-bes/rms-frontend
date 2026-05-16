@@ -1390,7 +1390,9 @@ function Reports() {
     </div>
   );
 }
-}// ── SETTINGS ─────────────────────────────────────────────────────────────────
+}
+
+// ── SETTINGS ─────────────────────────────────────────────────────────────────
 function Settings() {
   const [settings, setSettings] = useState(null);
   const [form, setForm] = useState({});

@@ -54,12 +54,12 @@ const styles = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #080c14;
-    --surface: #0e1420;
-    --surface2: #151d2e;
-    --surface3: #1c2640;
-    --border: #1e2d45;
-    --border2: #243450;
+    --bg: #0f1b35;
+    --surface: #162040;
+    --surface2: #1c2a52;
+    --surface3: #243566;
+    --border: #2a3f6f;
+    --border2: #334d85;
     --accent: #2563eb;
     --accent-light: #3b82f6;
     --accent-glow: rgba(37,99,235,0.15);
@@ -100,7 +100,7 @@ const styles = `
   .sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
   .nav-section { margin-bottom: 4px; }
   .nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); padding: 8px 10px 4px; }
-  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius); cursor: pointer; color: var(--silver); font-size: 13px; font-weight: 400; transition: all 0.15s; border: 1px solid transparent; margin-bottom: 1px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius); cursor: pointer; color: var(--silver); font-size: 15px; font-weight: 400; transition: all 0.15s; border: 1px solid transparent; margin-bottom: 1px; }
   .nav-item:hover { background: var(--surface2); color: var(--text); }
   .nav-item.active { background: var(--accent-glow); color: var(--accent-light); border-color: rgba(37,99,235,0.3); }
   .nav-item.active svg { color: var(--accent-light); }

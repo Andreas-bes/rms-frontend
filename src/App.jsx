@@ -432,7 +432,8 @@ function Vehicles() {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [modal, setModal] = useState(null); // null | 'add' | vehicle obj
+  const [modal, setModal] = useState(null);
+  const [importing, setImporting] = useState(false);
 
   const load = useCallback(() => {
     api("/api/vehicles/?active_only=false&available_only=false")
@@ -445,6 +446,47 @@ function Vehicles() {
     [v.reg_no, v.brand, v.model, v.vehicle_type].some(f => f?.toLowerCase().includes(search.toLowerCase()))
   );
 
+  const downloadTemplate = () => {
+    const rows = [
+      ["reg_no", "vehicle_type", "brand", "model", "gps_no", "daily_rate", "monthly_rate", "current_km", "notes"],
+      ["ABC-001", "car", "Toyota", "Corolla", "GPS-001", 45, 900, 15000, ""],
+      ["TNT-001", "motorcycle", "Honda", "CBR500", "", 20, 400, 5000, ""],
+    ];
+    const csvContent = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "vehicles_template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const token = localStorage.getItem("rms_token");
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`${API}/api/vehicles/import`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Import failed");
+      toast(`Imported ${data.imported} vehicles, skipped ${data.skipped}`, "success");
+      load();
+    } catch (err) {
+      toast(err.message, "error");
+    } finally {
+      setImporting(false);
+      e.target.value = "";
+    }
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -452,9 +494,18 @@ function Vehicles() {
           <div className="page-heading">Vehicles</div>
           <div className="page-sub">{vehicles.length} registered vehicles</div>
         </div>
-        <button className="btn btn-primary" onClick={() => setModal("add")}>
-          <Icon name="plus" size={14} /> Add Vehicle
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="btn btn-ghost" onClick={downloadTemplate}>
+            ⬇ Template
+          </button>
+          <label className="btn btn-ghost" style={{ cursor: "pointer" }}>
+            {importing ? "Importing…" : "📂 Import Excel"}
+            <input type="file" accept=".xlsx,.xls" style={{ display: "none" }} onChange={handleImport} disabled={importing} />
+          </label>
+          <button className="btn btn-primary" onClick={() => setModal("add")}>
+            <Icon name="plus" size={14} /> Add Vehicle
+          </button>
+        </div>
       </div>
 
       <div className="card">
@@ -511,7 +562,6 @@ function Vehicles() {
     </div>
   );
 }
-
 function VehicleModal({ vehicle, onClose, onSaved }) {
   const [form, setForm] = useState({
     reg_no: vehicle?.reg_no || "",
@@ -616,6 +666,7 @@ function Customers() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [modal, setModal] = useState(null);
+  const [importing, setImporting] = useState(false);
 
   const load = useCallback(() => {
     api("/api/customers/").then(setCustomers).catch(() => {}).finally(() => setLoading(false));
@@ -627,6 +678,47 @@ function Customers() {
     [c.customer_code, c.full_name, c.email, c.phone].some(f => f?.toLowerCase().includes(search.toLowerCase()))
   );
 
+  const downloadTemplate = () => {
+    const rows = [
+      ["customer_code", "full_name", "phone", "email", "address", "notes"],
+      ["CUST-001", "John Doe", "+357 99 123456", "john@example.com", "123 Main St, Nicosia", ""],
+      ["CUST-002", "Jane Smith", "+357 99 654321", "jane@example.com", "456 Oak Ave, Limassol", ""],
+    ];
+    const csvContent = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "customers_template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      const token = localStorage.getItem("rms_token");
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`${API}/api/customers/import`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Import failed");
+      toast(`Imported ${data.imported} customers, skipped ${data.skipped}`, "success");
+      load();
+    } catch (err) {
+      toast(err.message, "error");
+    } finally {
+      setImporting(false);
+      e.target.value = "";
+    }
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -634,9 +726,18 @@ function Customers() {
           <div className="page-heading">Customers</div>
           <div className="page-sub">{customers.length} registered customers</div>
         </div>
-        <button className="btn btn-primary" onClick={() => setModal("add")}>
-          <Icon name="plus" size={14} /> Add Customer
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="btn btn-ghost" onClick={downloadTemplate}>
+            ⬇ Template
+          </button>
+          <label className="btn btn-ghost" style={{ cursor: "pointer" }}>
+            {importing ? "Importing…" : "📂 Import Excel"}
+            <input type="file" accept=".xlsx,.xls" style={{ display: "none" }} onChange={handleImport} disabled={importing} />
+          </label>
+          <button className="btn btn-primary" onClick={() => setModal("add")}>
+            <Icon name="plus" size={14} /> Add Customer
+          </button>
+        </div>
       </div>
 
       <div className="card">

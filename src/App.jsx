@@ -327,6 +327,21 @@ function Dashboard() {
   const [stats, setStats] = useState(null);
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+
+  const openInvoicePdf = async (rentalId) => {
+    const token = localStorage.getItem("rms_token");
+    try {
+      const res = await fetch(`${API}/api/rentals/invoice/${rentalId}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to generate invoice");
+      const blob = await res.blob();
+      window.open(URL.createObjectURL(blob), "_blank");
+    } catch (err) {
+      toast(err.message, "error");
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -338,7 +353,7 @@ function Dashboard() {
       const available = vehicles.filter(v => v.status === "available");
       const totalRevenue = rentals.reduce((s, r) => s + parseFloat(r.total_amount || 0), 0);
       setStats({ vehicles: vehicles.length, available: available.length, activeRentals: active.length, customers: customers.length, totalRevenue });
-      setRentals(rentals.slice(0, 8));
+      setRentals(rentals);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -398,9 +413,18 @@ function Dashboard() {
               {rentals.length === 0 && (
                 <tr><td colSpan={7}><div className="empty"><p>No rentals yet</p></div></td></tr>
               )}
-              {rentals.map(r => (
+              {(showAll ? rentals : rentals.slice(0, 8)).map(r => (
                 <tr key={r.id}>
-                  <td><span className="mono text-accent">{r.invoice_no}</span></td>
+                  <td>
+                    <span
+                      className="mono text-accent"
+                      style={{ cursor: "pointer", textDecoration: "underline" }}
+                      onClick={() => openInvoicePdf(r.id)}
+                      title="Click to open invoice PDF"
+                    >
+                      {r.invoice_no}
+                    </span>
+                  </td>
                   <td>Vehicle #{r.vehicle_id}</td>
                   <td className="mono">{r.from_date}</td>
                   <td className="mono">{r.until_date}</td>
@@ -412,6 +436,22 @@ function Dashboard() {
             </tbody>
           </table>
         </div>
+        {!showAll && rentals.length > 8 && (
+          <div
+            onClick={() => setShowAll(true)}
+            style={{ textAlign: "center", padding: "12px", borderTop: "1px solid var(--border)", cursor: "pointer", color: "var(--accent-light)", fontSize: 13 }}
+          >
+            Show more ({rentals.length - 8} more rentals) ↓
+          </div>
+        )}
+        {showAll && rentals.length > 8 && (
+          <div
+            onClick={() => setShowAll(false)}
+            style={{ textAlign: "center", padding: "12px", borderTop: "1px solid var(--border)", cursor: "pointer", color: "var(--accent-light)", fontSize: 13 }}
+          >
+            Show less ↑
+          </div>
+        )}
       </div>
     </div>
   );
@@ -873,6 +913,20 @@ function Rentals() {
 
   useEffect(() => { load(); }, [load]);
 
+  const openInvoicePdf = async (rentalId) => {
+    const token = localStorage.getItem("rms_token");
+    try {
+      const res = await fetch(`${API}/api/rentals/invoice/${rentalId}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to generate invoice");
+      const blob = await res.blob();
+      window.open(URL.createObjectURL(blob), "_blank");
+    } catch (err) {
+      toast(err.message, "error");
+    }
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -900,7 +954,16 @@ function Rentals() {
                 {rentals.length === 0 && <tr><td colSpan={9}><div className="empty"><p>No rentals yet</p></div></td></tr>}
                 {rentals.map(r => (
                   <tr key={r.id}>
-                    <td><span className="mono text-accent fw-bold">{r.invoice_no}</span></td>
+                    <td>
+                      <span
+                        className="mono text-accent fw-bold"
+                        style={{ cursor: "pointer", textDecoration: "underline" }}
+                        onClick={() => openInvoicePdf(r.id)}
+                        title="Click to open invoice PDF"
+                      >
+                        {r.invoice_no}
+                      </span>
+                    </td>
                     <td>#{r.customer_id}</td>
                     <td>#{r.vehicle_id}</td>
                     <td className="mono">{r.from_date}</td>

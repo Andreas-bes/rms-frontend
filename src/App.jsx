@@ -1765,8 +1765,19 @@ const PAGE_TITLES = {
 export default function App() {
   const [user, setUser] = useState(() => {
     const token = localStorage.getItem("rms_token");
-    return token ? { full_name: "Admin", role: "admin" } : null;
-  });
+    if (!token) return null;
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp * 1000 < Date.now()) {
+            localStorage.removeItem("rms_token");
+            return null;
+        }
+        return { full_name: "Admin", role: "admin" };
+    } catch {
+        localStorage.removeItem("rms_token");
+        return null;
+    }
+});
   const [page, setPage] = useState("dashboard");
 
   const handleLogin = (data) => setUser({ full_name: data.full_name, role: data.role });

@@ -1250,16 +1250,38 @@ function ReturnModal({ rental, onClose, onSaved }) {
 // ── PAYMENTS ─────────────────────────────────────────────────────────────────
 function Payments() {
   const [rentals, setRentals] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
+  const [quickModal, setQuickModal] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [customerInvoices, setCustomerInvoices] = useState([]);
+  const [selectedInvoice, setSelectedInvoice] = useState("");
 
   const load = useCallback(() => {
-    api("/api/rentals/").then(r => {
-      setRentals(r.filter(x => parseFloat(x.balance) > 0));
+    Promise.all([
+      api("/api/rentals/"),
+      api("/api/customers/"),
+    ]).then(([rentalsData, customersData]) => {
+      setRentals(rentalsData.filter(x => parseFloat(x.balance) > 0));
+      setCustomers(customersData);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const handleCustomerChange = (customerId) => {
+    setSelectedCustomer(customerId);
+    setSelectedInvoice("");
+    if (customerId) {
+      const invoices = rentals.filter(r => r.customer_id === parseInt(customerId));
+      setCustomerInvoices(invoices);
+    } else {
+      setCustomerInvoices([]);
+    }
+  };
+
+  const selectedRental = rentals.find(r => r.id === parseInt(selectedInvoice));
 
   return (
     <div>
@@ -1268,8 +1290,65 @@ function Payments() {
           <div className="page-heading">Payments</div>
           <div className="page-sub">Record payments against rentals with outstanding balance</div>
         </div>
+        <button className="btn btn-primary" onClick={() => { setQuickModal(true); setSelectedCustomer(""); setSelectedInvoice(""); setCustomerInvoices([]); }}>
+          <Icon name="plus" size={14} /> Record Payment
+        </button>
       </div>
 
+      {/* ── Quick Payment Modal ── */}
+      {quickModal && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setQuickModal(false)}>
+          <div className="modal">
+            <div className="modal-header">
+              <div className="modal-title">Record Payment</div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setQuickModal(false)}><Icon name="close" size={14} /></button>
+            </div>
+            <div className="modal-body">
+              <div className="form-grid">
+                <div className="field form-full">
+                  <label>Select Customer *</label>
+                  <select value={selectedCustomer} onChange={e => handleCustomerChange(e.target.value)}>
+                    <option value="">Choose a customer…</option>
+                    {customers.map(c => (
+                      <option key={c.id} value={c.id}>{c.customer_code} — {c.full_name}</option>
+                    ))}
+                  </select>
+                </div>
+                {selectedCustomer && (
+                  <div className="field form-full">
+                    <label>Select Invoice *</label>
+                    <select value={selectedInvoice} onChange={e => setSelectedInvoice(e.target.value)}>
+                      <option value="">Choose an invoice…</option>
+                      {customerInvoices.length === 0 && <option disabled>No outstanding invoices</option>}
+                      {customerInvoices.map(r => (
+                        <option key={r.id} value={r.id}>{r.invoice_no} — Balance: €{parseFloat(r.balance).toFixed(2)}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {selectedRental && (
+                <>
+                  <div className="divider" />
+                  <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "12px 16px", marginBottom: 16, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+                    <div><div className="text-dim" style={{ fontSize: 11, marginBottom: 4 }}>INVOICE</div><div className="mono text-accent">{selectedRental.invoice_no}</div></div>
+                    <div><div className="text-dim" style={{ fontSize: 11, marginBottom: 4 }}>TOTAL</div><div className="amount">€{parseFloat(selectedRental.total_amount).toFixed(2)}</div></div>
+                    <div><div className="text-dim" style={{ fontSize: 11, marginBottom: 4 }}>BALANCE DUE</div><div className="amount text-danger fw-bold">€{parseFloat(selectedRental.balance).toFixed(2)}</div></div>
+                  </div>
+                  <QuickPaymentForm
+                    rental={selectedRental}
+                    onClose={() => setQuickModal(false)}
+                    onSaved={() => { setQuickModal(false); load(); toast("Payment recorded!"); }}
+                  />
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Outstanding Balances Table ── */}
       <div className="card">
         <div className="card-header">
           <div className="card-title">Outstanding Balances</div>
@@ -1314,7 +1393,7 @@ function Payments() {
   );
 }
 
-function PaymentModal({ rental, onClose, onSaved }) {
+function QuickPaymentForm({ rental, onClose, onSaved }) {
   const today = new Date().toISOString().split("T")[0];
   const [form, setForm] = useState({
     customer_id: rental.customer_id,
@@ -1343,53 +1422,37 @@ function PaymentModal({ rental, onClose, onSaved }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
-      <div className="modal">
-        <div className="modal-header">
-          <div className="modal-title">Record Payment — {rental.invoice_no}</div>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}><Icon name="close" size={14} /></button>
-        </div>
-        <div className="modal-body">
-          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "12px 16px", marginBottom: 20, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
-            <div><div className="text-dim" style={{ fontSize: 11, marginBottom: 4 }}>INVOICE</div><div className="mono text-accent">{rental.invoice_no}</div></div>
-            <div><div className="text-dim" style={{ fontSize: 11, marginBottom: 4 }}>TOTAL</div><div className="amount">€{parseFloat(rental.total_amount).toFixed(2)}</div></div>
-            <div><div className="text-dim" style={{ fontSize: 11, marginBottom: 4 }}>BALANCE DUE</div><div className="amount text-danger fw-bold">€{parseFloat(rental.balance).toFixed(2)}</div></div>
-          </div>
-          <div className="form-grid">
-            <div className="field">
-              <label>Payment Date *</label>
-              <input type="date" value={form.payment_date} onChange={f("payment_date")} />
-            </div>
-            <div className="field">
-              <label>Amount (€) *</label>
-              <input type="number" step="0.01" value={form.amount} onChange={f("amount")} />
-            </div>
-            <div className="field form-full">
-              <label>Method *</label>
-              <select value={form.method} onChange={f("method")}>
-                <option value="cash">Cash</option>
-                <option value="card">Card</option>
-                <option value="transfer">Bank Transfer</option>
-                <option value="cheque">Cheque</option>
-              </select>
-            </div>
-            <div className="field form-full">
-              <label>Notes</label>
-              <textarea value={form.notes} onChange={f("notes")} placeholder="Payment reference, notes…" />
-            </div>
-          </div>
-          <div className="modal-footer">
-            <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button className="btn btn-primary" onClick={save} disabled={saving}>
-              {saving ? "Saving…" : "Record Payment"}
-            </button>
-          </div>
-        </div>
+    <div className="form-grid">
+      <div className="field">
+        <label>Payment Date *</label>
+        <input type="date" value={form.payment_date} onChange={f("payment_date")} />
+      </div>
+      <div className="field">
+        <label>Amount (€) *</label>
+        <input type="number" step="0.01" value={form.amount} onChange={f("amount")} />
+      </div>
+      <div className="field form-full">
+        <label>Method *</label>
+        <select value={form.method} onChange={f("method")}>
+          <option value="cash">Cash</option>
+          <option value="card">Card</option>
+          <option value="transfer">Bank Transfer</option>
+          <option value="cheque">Cheque</option>
+        </select>
+      </div>
+      <div className="field form-full">
+        <label>Notes</label>
+        <textarea value={form.notes} onChange={f("notes")} placeholder="Payment reference, notes…" />
+      </div>
+      <div className="modal-footer form-full">
+        <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+        <button className="btn btn-primary" onClick={save} disabled={saving}>
+          {saving ? "Saving…" : "Record Payment"}
+        </button>
       </div>
     </div>
   );
 }
-
 // ── REPORTS ──────────────────────────────────────────────────────────────────
 function Reports() {
   const [customers, setCustomers] = useState([]);

@@ -1685,6 +1685,12 @@ function Settings() {
               <input value={form.address || ""} onChange={f("address")} />
             </div>
           )}
+          {form.address !== undefined && (
+              <div className="field form-full">
+              <label>Company ID (Registration & VAT Number)</label>
+              <input value={form.company_id || ""} onChange={f("company_id")} placeholder="REG: 12345 | VAT: CY12345678X" />
+           </div>
+)}
           {form.phone !== undefined && (
             <div className="field">
               <label>Phone</label>

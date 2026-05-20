@@ -1510,11 +1510,16 @@ function Reports() {
           <button className="btn btn-primary" onClick={fetchReport} disabled={!selected || loading}>
             {loading ? "Loading…" : "Generate Report"}
           </button>
-          {selected && (
-            <button className="btn btn-secondary" onClick={() => openPdf(`/api/reports/customer-history/${selected}/pdf`)}>
-              📄 PDF Statement
-            </button>
-          )}
+{selected && (
+  <button className="btn btn-secondary" onClick={() => { 
+    setDateModal({ url: `/api/reports/customer-history/${selected}/pdf`, label: "Customer PDF Statement" }); 
+    setFromDate(""); 
+    setToDate(""); 
+  }}>
+    📄 PDF Statement
+  </button>
+)}
+          
         </div>
 
         {report && (

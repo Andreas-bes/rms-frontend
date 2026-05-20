@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 
 // ── API ──────────────────────────────────────────────────────────────────────
-const API = "https://web-production-0b506.up.railway.app";
+const API = import.meta.env.VITE_API_URL || "https://web-production-0b506.up.railway.app";
 
 function api(path, opts = {}) {
   const token = localStorage.getItem("rms_token");

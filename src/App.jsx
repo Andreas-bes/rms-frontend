@@ -1281,6 +1281,7 @@ function ReturnModal({ rental, onClose, onSaved }) {
 function Payments() {
   const [rentals, setRentals] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [quickModal, setQuickModal] = useState(false);
@@ -1292,9 +1293,11 @@ function Payments() {
     Promise.all([
       api("/api/rentals/"),
       api("/api/customers/"),
-    ]).then(([rentalsData, customersData]) => {
+      api("/api/payments/"),
+    ]).then(([rentalsData, customersData, paymentsData]) => {
       setRentals(rentalsData.filter(x => parseFloat(x.balance) > 0));
       setCustomers(customersData);
+      setPayments(paymentsData);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
@@ -1312,6 +1315,20 @@ function Payments() {
   };
 
   const selectedRental = rentals.find(r => r.id === parseInt(selectedInvoice));
+
+  const openReceiptPdf = async (paymentId) => {
+    const token = localStorage.getItem("rms_token");
+    try {
+      const res = await fetch(`${API}/api/rentals/payments/${paymentId}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to generate receipt");
+      const blob = await res.blob();
+      window.open(URL.createObjectURL(blob), "_blank");
+    } catch (err) {
+      toast(err.message, "error");
+    }
+  };
 
   return (
     <div>
@@ -1357,7 +1374,6 @@ function Payments() {
                   </div>
                 )}
               </div>
-
               {selectedRental && (
                 <>
                   <div className="divider" />
@@ -1378,8 +1394,8 @@ function Payments() {
         </div>
       )}
 
-      {/* ── Outstanding Balances Table ── */}
-      <div className="card">
+      {/* ── Outstanding Balances ── */}
+      <div className="card" style={{ marginBottom: 16 }}>
         <div className="card-header">
           <div className="card-title">Outstanding Balances</div>
         </div>
@@ -1402,6 +1418,44 @@ function Payments() {
                     <td>
                       <button className="btn btn-primary btn-sm" onClick={() => setModal(r)}>
                         <Icon name="payment" size={12} /> Record Payment
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* ── Payment History ── */}
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">Payment History</div>
+        </div>
+        <div className="table-wrap">
+          {loading ? <div className="empty"><p>Loading…</p></div> : (
+            <table>
+              <thead>
+                <tr><th>Receipt</th><th>Invoice</th><th>Customer</th><th>Date</th><th>Amount</th><th>Method</th><th></th></tr>
+              </thead>
+              <tbody>
+                {payments.length === 0 && <tr><td colSpan={7}><div className="empty"><p>No payments recorded yet</p></div></td></tr>}
+                {payments.map(p => (
+                  <tr key={p.id}>
+                    <td><span className="mono text-accent fw-bold">{p.receipt_no}</span></td>
+                    <td><span className="mono">#{p.rental_id}</span></td>
+                    <td>#{p.customer_id}</td>
+                    <td className="mono">{p.payment_date}</td>
+                    <td><span className="amount text-success">€{parseFloat(p.amount).toFixed(2)}</span></td>
+                    <td><span className="badge badge-gray">{p.method}</span></td>
+                    <td>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => openReceiptPdf(p.id)}
+                        title="Print Receipt"
+                      >
+                        🧾
                       </button>
                     </td>
                   </tr>

@@ -721,8 +721,8 @@ function Customers() {
 const downloadTemplate = () => {
   const rows = [
     ["customer_code", "full_name", "phone", "email", "address", "nationality", "driving_license", "notes"],
-    ["CUST-001", "John Doe", "+357 99 123456", "john@example.com", "123 Main St, Nicosia", "Cypriot", "DL-123456", ""],
-    ["CUST-002", "Jane Smith", "+357 99 654321", "jane@example.com", "456 Oak Ave, Limassol", "Greek", "DL-654321", ""],
+    ["CUST-001", "John Doe", "+357 99 123456", "john@example.com", "123 Main St Nicosia", "Cypriot", "DL-123456", ""],
+    ["CUST-002", "Jane Smith", "+357 99 654321", "jane@example.com", "456 Oak Ave Limassol", "Greek", "DL-654321", ""],
   ];
   const csvContent = rows.map(r => r.join(",")).join("\n");
   const blob = new Blob([csvContent], { type: "text/csv" });

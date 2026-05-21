@@ -1293,7 +1293,7 @@ function Payments() {
     Promise.all([
       api("/api/rentals/"),
       api("/api/customers/"),
-      api("/api/payments/"),
+      api("/api/rentals/payments/"),
     ]).then(([rentalsData, customersData, paymentsData]) => {
       setRentals(rentalsData.filter(x => parseFloat(x.balance) > 0));
       setCustomers(customersData);

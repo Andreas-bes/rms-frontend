@@ -1707,6 +1707,162 @@ function Reports() {
   );
 }
 
+// ── USERS ────────────────────────────────────────────────────────────────────
+function Users() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState(false);
+
+  const load = useCallback(() => {
+    api("/api/auth/users").then(setUsers).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const toggleUser = async (userId) => {
+    try {
+      await api(`/api/auth/users/${userId}/toggle`, { method: "PATCH" });
+      load();
+      toast("User status updated!");
+    } catch (err) {
+      toast(err.message, "error");
+    }
+  };
+
+  return (
+    <div>
+      <div className="page-header">
+        <div>
+          <div className="page-heading">User Management</div>
+          <div className="page-sub">{users.length} registered users</div>
+        </div>
+        <button className="btn btn-primary" onClick={() => setModal(true)}>
+          <Icon name="plus" size={14} /> Add User
+        </button>
+      </div>
+
+      <div className="card">
+        <div className="table-wrap">
+          {loading ? <div className="empty"><p>Loading…</p></div> : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Full Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.length === 0 && <tr><td colSpan={5}><div className="empty"><p>No users found</p></div></td></tr>}
+                {users.map(u => (
+                  <tr key={u.id}>
+                    <td className="fw-bold">{u.full_name}</td>
+                    <td className="text-dim">{u.email}</td>
+                    <td>
+                      <span className={`badge ${u.role === "admin" ? "badge-blue" : "badge-gray"}`}>
+                        {u.role}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${u.is_active ? "badge-green" : "badge-red"}`}>
+                        {u.is_active ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className={`btn btn-sm ${u.is_active ? "btn-danger" : "btn-ghost"}`}
+                        onClick={() => toggleUser(u.id)}
+                      >
+                        {u.is_active ? "Disable" : "Enable"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {modal && (
+        <UserModal
+          onClose={() => setModal(false)}
+          onSaved={() => { setModal(false); load(); toast("User added!"); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function UserModal({ onClose, onSaved }) {
+  const [form, setForm] = useState({
+    email: "",
+    full_name: "",
+    password: "",
+    role: "staff",
+  });
+  const [saving, setSaving] = useState(false);
+  const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
+
+  const save = async () => {
+    if (!form.email || !form.full_name || !form.password) {
+      toast("Please fill in all required fields", "error");
+      return;
+    }
+    setSaving(true);
+    try {
+      await api("/api/auth/users", { method: "POST", body: JSON.stringify(form) });
+      onSaved();
+    } catch (err) {
+      toast(err.message, "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-header">
+          <div className="modal-title">Add User</div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}><Icon name="close" size={14} /></button>
+        </div>
+        <div className="modal-body">
+          <div className="form-grid">
+            <div className="field">
+              <label>Full Name *</label>
+              <input value={form.full_name} onChange={f("full_name")} placeholder="John Doe" />
+            </div>
+            <div className="field">
+              <label>Email *</label>
+              <input type="email" value={form.email} onChange={f("email")} placeholder="john@example.com" />
+            </div>
+            <div className="field">
+              <label>Password *</label>
+              <input type="password" value={form.password} onChange={f("password")} placeholder="••••••••" />
+            </div>
+            <div className="field">
+              <label>Role</label>
+              <select value={form.role} onChange={f("role")}>
+                <option value="staff">Staff</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+            <button className="btn btn-primary" onClick={save} disabled={saving}>
+              {saving ? "Saving…" : "Add User"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── SETTINGS ─────────────────────────────────────────────────────────────────
 function Settings() {
   const [settings, setSettings] = useState(null);

@@ -1959,6 +1959,7 @@ const NAV = [
   { id: "payments", label: "Payments", icon: "payment" },
   { id: "reports", label: "Reports", icon: "report" },
   { id: "settings", label: "Settings", icon: "settings" },
+  { id: "users", label: "Users", icon: "customer", adminOnly: true },
 ];
 
 function Sidebar({ page, setPage, user, onLogout }) {
@@ -1968,16 +1969,16 @@ function Sidebar({ page, setPage, user, onLogout }) {
         <div className="logo-text">Business <span>easy</span><br />Solutions</div>
       </div>
       <nav className="sidebar-nav">
-        {NAV.map(item => (
-          <div
-            key={item.id}
-            className={`nav-item ${page === item.id ? "active" : ""}`}
-            onClick={() => setPage(item.id)}
-          >
-            <Icon name={item.icon} size={15} />
-            {item.label}
-          </div>
-        ))}
+        {NAV.filter(item => !item.adminOnly || user?.role === "admin").map(item => (
+  <div
+    key={item.id}
+    className={`nav-item ${page === item.id ? "active" : ""}`}
+    onClick={() => setPage(item.id)}
+  >
+    <Icon name={item.icon} size={15} />
+    {item.label}
+  </div>
+))}
       </nav>
       <div className="sidebar-footer">
         <div className="user-badge">
@@ -1999,7 +2000,7 @@ function Sidebar({ page, setPage, user, onLogout }) {
 const PAGE_TITLES = {
   dashboard: "Dashboard", vehicles: "Vehicles", customers: "Customers",
   rentals: "Rentals", returns: "Returns", payments: "Payments",
-  reports: "Reports", settings: "Settings",
+  reports: "Reports", settings: "Settings", users: "User Management",
 };
 
 export default function App() {
@@ -2031,7 +2032,7 @@ export default function App() {
     </>
   );
 
-  const pages = { dashboard: Dashboard, vehicles: Vehicles, customers: Customers, rentals: Rentals, returns: Returns, payments: Payments, reports: Reports, settings: Settings };
+  const pages = { dashboard: Dashboard, vehicles: Vehicles, customers: Customers, rentals: Rentals, returns: Returns, payments: Payments, reports: Reports, settings: Settings, users: Users };
   const PageComponent = pages[page] || Dashboard;
 
   return (

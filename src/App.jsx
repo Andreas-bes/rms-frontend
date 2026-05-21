@@ -718,22 +718,21 @@ function Customers() {
     [c.customer_code, c.full_name, c.email, c.phone].some(f => f?.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const downloadTemplate = () => {
-    const rows = [
-      ["customer_code", "full_name", "phone", "email", "address", "notes"],
-      ["CUST-001", "John Doe", "+357 99 123456", "john@example.com", "123 Main St, Nicosia", ""],
-      ["CUST-002", "Jane Smith", "+357 99 654321", "jane@example.com", "456 Oak Ave, Limassol", ""],
-    ];
-    const csvContent = rows.map(r => r.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "customers_template.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
+const downloadTemplate = () => {
+  const rows = [
+    ["customer_code", "full_name", "phone", "email", "address", "nationality", "driving_license", "notes"],
+    ["CUST-001", "John Doe", "+357 99 123456", "john@example.com", "123 Main St, Nicosia", "Cypriot", "DL-123456", ""],
+    ["CUST-002", "Jane Smith", "+357 99 654321", "jane@example.com", "456 Oak Ave, Limassol", "Greek", "DL-654321", ""],
+  ];
+  const csvContent = rows.map(r => r.join(",")).join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "customers_template.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+};
   const handleImport = async (e) => {
     const file = e.target.files[0];
     if (!file) return;

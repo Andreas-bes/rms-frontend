@@ -936,6 +936,20 @@ function Rentals() {
     }
   };
 
+  const openAgreementPdf = async (rentalId) => {
+    const token = localStorage.getItem("rms_token");
+    try {
+      const res = await fetch(`${API}/api/rentals/${rentalId}/agreement/pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error("Failed to generate agreement");
+      const blob = await res.blob();
+      window.open(URL.createObjectURL(blob), "_blank");
+    } catch (err) {
+      toast(err.message, "error");
+    }
+  };
+
   return (
     <div>
       <div className="page-header">
@@ -956,11 +970,11 @@ function Rentals() {
                 <tr>
                   <th>Invoice</th><th>Customer</th><th>Vehicle</th>
                   <th>From</th><th>Until</th><th>Days</th>
-                  <th>Total</th><th>Balance</th><th>Status</th>
+                  <th>Total</th><th>Balance</th><th>Status</th><th></th>
                 </tr>
               </thead>
               <tbody>
-                {rentals.length === 0 && <tr><td colSpan={9}><div className="empty"><p>No rentals yet</p></div></td></tr>}
+                {rentals.length === 0 && <tr><td colSpan={10}><div className="empty"><p>No rentals yet</p></div></td></tr>}
                 {rentals.map(r => (
                   <tr key={r.id}>
                     <td>
@@ -981,6 +995,15 @@ function Rentals() {
                     <td><span className="amount">€{parseFloat(r.total_amount).toFixed(2)}</span></td>
                     <td><span className={`amount ${parseFloat(r.balance) > 0 ? "text-danger" : "text-success"}`}>€{parseFloat(r.balance).toFixed(2)}</span></td>
                     <td><StatusBadge status={r.status} /></td>
+                    <td>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => openAgreementPdf(r.id)}
+                        title="Print Agreement"
+                      >
+                        📋
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -998,7 +1021,6 @@ function Rentals() {
     </div>
   );
 }
-
 function RentalModal({ onClose, onSaved }) {
   const [vehicles, setVehicles] = useState([]);
   const [customers, setCustomers] = useState([]);

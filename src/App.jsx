@@ -834,6 +834,8 @@ function CustomerModal({ customer, onClose, onSaved }) {
     phone: customer?.phone || "",
     email: customer?.email || "",
     address: customer?.address || "",
+    nationality: customer?.nationality || "",
+    driving_license: customer?.driving_license || "",
     notes: customer?.notes || "",
   });
   const [saving, setSaving] = useState(false);
@@ -865,7 +867,7 @@ function CustomerModal({ customer, onClose, onSaved }) {
         <div className="modal-body">
           <div className="form-grid">
             <div className="field">
-              <label>Customer Code *</label>
+              <label>Customer Code / Passport No *</label>
               <input value={form.customer_code} onChange={f("customer_code")} placeholder="CUST-001" />
             </div>
             <div className="field">
@@ -879,6 +881,14 @@ function CustomerModal({ customer, onClose, onSaved }) {
             <div className="field">
               <label>Email</label>
               <input type="email" value={form.email} onChange={f("email")} placeholder="john@example.com" />
+            </div>
+            <div className="field">
+              <label>Nationality</label>
+              <input value={form.nationality} onChange={f("nationality")} placeholder="Cypriot" />
+            </div>
+            <div className="field">
+              <label>Driving License No</label>
+              <input value={form.driving_license} onChange={f("driving_license")} placeholder="DL-123456" />
             </div>
             <div className="field form-full">
               <label>Address</label>
@@ -900,7 +910,6 @@ function CustomerModal({ customer, onClose, onSaved }) {
     </div>
   );
 }
-
 // ── RENTALS ──────────────────────────────────────────────────────────────────
 function Rentals() {
   const [rentals, setRentals] = useState([]);

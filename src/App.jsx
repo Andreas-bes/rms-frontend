@@ -1287,6 +1287,7 @@ function ReturnModal({ rental, onClose, onSaved }) {
 // ── PAYMENTS ─────────────────────────────────────────────────────────────────
 function Payments() {
   const [rentals, setRentals] = useState([]);
+  const [allRentals, setAllRentals] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1302,6 +1303,7 @@ function Payments() {
       api("/api/customers/"),
       api("/api/rentals/payments/"),
     ]).then(([rentalsData, customersData, paymentsData]) => {
+      setAllRentals(rentalsData);
       setRentals(rentalsData.filter(x => parseFloat(x.balance) > 0));
       setCustomers(customersData);
       setPayments(paymentsData);
@@ -1410,14 +1412,22 @@ function Payments() {
           {loading ? <div className="empty"><p>Loading…</p></div> : (
             <table>
               <thead>
-                <tr><th>Invoice</th><th>Customer</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th><th></th></tr>
+                <tr>
+                  <th>Invoice</th>
+                  <th>Customer</th>
+                  <th>Total</th>
+                  <th>Paid</th>
+                  <th>Balance</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
               </thead>
               <tbody>
                 {rentals.length === 0 && <tr><td colSpan={7}><div className="empty"><p>No outstanding balances</p></div></td></tr>}
                 {rentals.map(r => (
                   <tr key={r.id}>
                     <td><span className="mono text-accent">{r.invoice_no}</span></td>
-                    <td>#{r.customer_id}</td>
+                    <td>{customers.find(c => c.id === r.customer_id)?.full_name || `#${r.customer_id}`}</td>
                     <td><span className="amount">€{parseFloat(r.total_amount).toFixed(2)}</span></td>
                     <td><span className="amount text-success">€{(parseFloat(r.total_amount) - parseFloat(r.balance)).toFixed(2)}</span></td>
                     <td><span className="amount text-danger fw-bold">€{parseFloat(r.balance).toFixed(2)}</span></td>
@@ -1444,15 +1454,23 @@ function Payments() {
           {loading ? <div className="empty"><p>Loading…</p></div> : (
             <table>
               <thead>
-                <tr><th>Receipt</th><th>Invoice</th><th>Customer</th><th>Date</th><th>Amount</th><th>Method</th><th></th></tr>
+                <tr>
+                  <th>Receipt</th>
+                  <th>Invoice</th>
+                  <th>Customer</th>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Method</th>
+                  <th></th>
+                </tr>
               </thead>
               <tbody>
                 {payments.length === 0 && <tr><td colSpan={7}><div className="empty"><p>No payments recorded yet</p></div></td></tr>}
                 {payments.map(p => (
                   <tr key={p.id}>
                     <td><span className="mono text-accent fw-bold">{p.receipt_no}</span></td>
-                    <td><span className="mono">#{p.rental_id}</span></td>
-                    <td>#{p.customer_id}</td>
+                    <td><span className="mono text-accent">{allRentals.find(r => r.id === p.rental_id)?.invoice_no || `#${p.rental_id}`}</span></td>
+                    <td>{customers.find(c => c.id === p.customer_id)?.full_name || `#${p.customer_id}`}</td>
                     <td className="mono">{p.payment_date}</td>
                     <td><span className="amount text-success">€{parseFloat(p.amount).toFixed(2)}</span></td>
                     <td><span className="badge badge-gray">{p.method}</span></td>

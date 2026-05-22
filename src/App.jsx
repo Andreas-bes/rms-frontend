@@ -1870,6 +1870,82 @@ function UserModal({ onClose, onSaved }) {
   );
 }
 
+function PaymentModal({ rental, onClose, onSaved }) {
+  const today = new Date().toISOString().split("T")[0];
+  const [form, setForm] = useState({
+    customer_id: rental.customer_id,
+    rental_id: rental.id,
+    payment_date: today,
+    amount: parseFloat(rental.balance).toFixed(2),
+    method: "cash",
+    notes: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      await api("/api/rentals/payments", {
+        method: "POST",
+        body: JSON.stringify({ ...form, amount: parseFloat(form.amount) }),
+      });
+      onSaved();
+    } catch (err) {
+      toast(err.message, "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-header">
+          <div className="modal-title">Record Payment — {rental.invoice_no}</div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}><Icon name="close" size={14} /></button>
+        </div>
+        <div className="modal-body">
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "12px 16px", marginBottom: 20, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+            <div><div className="text-dim" style={{ fontSize: 11, marginBottom: 4 }}>INVOICE</div><div className="mono text-accent">{rental.invoice_no}</div></div>
+            <div><div className="text-dim" style={{ fontSize: 11, marginBottom: 4 }}>TOTAL</div><div className="amount">€{parseFloat(rental.total_amount).toFixed(2)}</div></div>
+            <div><div className="text-dim" style={{ fontSize: 11, marginBottom: 4 }}>BALANCE DUE</div><div className="amount text-danger fw-bold">€{parseFloat(rental.balance).toFixed(2)}</div></div>
+          </div>
+          <div className="form-grid">
+            <div className="field">
+              <label>Payment Date *</label>
+              <input type="date" value={form.payment_date} onChange={f("payment_date")} />
+            </div>
+            <div className="field">
+              <label>Amount (€) *</label>
+              <input type="number" step="0.01" value={form.amount} onChange={f("amount")} />
+            </div>
+            <div className="field form-full">
+              <label>Method *</label>
+              <select value={form.method} onChange={f("method")}>
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="transfer">Bank Transfer</option>
+                <option value="cheque">Cheque</option>
+              </select>
+            </div>
+            <div className="field form-full">
+              <label>Notes</label>
+              <textarea value={form.notes} onChange={f("notes")} placeholder="Payment reference, notes…" />
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+            <button className="btn btn-primary" onClick={save} disabled={saving}>
+              {saving ? "Saving…" : "Record Payment"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── SETTINGS ─────────────────────────────────────────────────────────────────
 function Settings() {
   const [settings, setSettings] = useState(null);

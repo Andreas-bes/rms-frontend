@@ -2022,7 +2022,20 @@ export default function App() {
   const [page, setPage] = useState("dashboard");
 
   const handleLogin = (data) => setUser({ full_name: data.full_name, role: data.role });
-  const handleLogout = () => { localStorage.removeItem("rms_token"); setUser(null); };
+  const handleLogout = async () => {
+    try {
+        const token = localStorage.getItem("rms_token");
+        await fetch(`${API}/api/auth/logout`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` }
+        });
+    } catch (err) {
+        // ignore errors on logout
+    } finally {
+        localStorage.removeItem("rms_token");
+        setUser(null);
+    }
+};
 
   if (!user) return (
     <>

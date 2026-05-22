@@ -79,6 +79,13 @@ const styles = `
     --shadow-accent: 0 0 24px rgba(37,99,235,0.2);
   }
 
+/* Date picker icon */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.7;
+    cursor: pointer;
+  }
+  
   html, body, #root { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 14px; line-height: 1.5; }
 
   /* Scrollbar */

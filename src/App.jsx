@@ -2158,7 +2158,7 @@ export default function App() {
           <div className="topbar">
             <div className="page-title">{PAGE_TITLES[page]}</div>
             <div className="topbar-actions">
-              <span style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono)" }}>RMS v1.0</span>
+              <span style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono)" }}>RMS v1.1</span>
             </div>
           </div>
           <div className="content">

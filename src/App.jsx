@@ -2181,26 +2181,34 @@ export default function App() {
     const token = localStorage.getItem("rms_token");
     if (!token) return null;
     try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.exp * 1000 < Date.now()) {
-            localStorage.removeItem("rms_token");
-            return null;
-        }
-        return { full_name: "Admin", role: "admin" };
-    } catch {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp * 1000 < Date.now()) {
         localStorage.removeItem("rms_token");
         return null;
+      }
+      return { full_name: "Admin", role: "admin" };
+    } catch {
+      localStorage.removeItem("rms_token");
+      return null;
     }
-});
-const [page, setPage] = useState("dashboard");
+  });
+  const [page, setPage] = useState("dashboard");
   const [profileModal, setProfileModal] = useState(false);
   const [licenseExpiry, setLicenseExpiry] = useState(null);
 
   useEffect(() => {
-    api("/api/settings/").then(data => {
-      if (data.license_expiry) setLicenseExpiry(data.license_expiry);
-    }).catch(() => {});
-  }, []);
+    if (!user) return;
+    const token = localStorage.getItem("rms_token");
+    if (!token) return;
+    fetch(`${API}/api/settings/`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.license_expiry) setLicenseExpiry(data.license_expiry);
+      })
+      .catch(() => {});
+  }, [user]);
 
   const getLicenseStatus = () => {
     if (!licenseExpiry) return null;
@@ -2213,6 +2221,7 @@ const [page, setPage] = useState("dashboard");
   };
 
   const handleLogin = (data) => setUser({ full_name: data.full_name, role: data.role });
+
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem("rms_token");
@@ -2225,6 +2234,7 @@ const [page, setPage] = useState("dashboard");
     } finally {
       localStorage.removeItem("rms_token");
       setUser(null);
+      setLicenseExpiry(null);
     }
   };
 

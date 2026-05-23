@@ -2050,6 +2050,78 @@ function Settings() {
   );
 }
 
+// ── PROFILE MODAL ────────────────────────────────────────────────────────────
+function ProfileModal({ user, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    full_name: user?.full_name || "",
+    email: user?.email || "",
+    password: "",
+    confirm_password: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
+
+  const save = async () => {
+    if (form.password && form.password !== form.confirm_password) {
+      toast("Passwords do not match", "error");
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        full_name: form.full_name,
+        email: form.email,
+        ...(form.password ? { password: form.password } : {}),
+      };
+      await api("/api/auth/me", { method: "PUT", body: JSON.stringify(payload) });
+      toast("Profile updated successfully!");
+      onSaved(form.full_name);
+      onClose();
+    } catch (err) {
+      toast(err.message, "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-header">
+          <div className="modal-title">My Profile</div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}><Icon name="close" size={14} /></button>
+        </div>
+        <div className="modal-body">
+          <div className="form-grid">
+            <div className="field form-full">
+              <label>Full Name *</label>
+              <input value={form.full_name} onChange={f("full_name")} placeholder="Your name" />
+            </div>
+            <div className="field form-full">
+              <label>Email *</label>
+              <input type="email" value={form.email} onChange={f("email")} placeholder="your@email.com" />
+            </div>
+            <div className="field">
+              <label>New Password</label>
+              <input type="password" value={form.password} onChange={f("password")} placeholder="Leave blank to keep current" />
+            </div>
+            <div className="field">
+              <label>Confirm Password</label>
+              <input type="password" value={form.confirm_password} onChange={f("confirm_password")} placeholder="Repeat new password" />
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+            <button className="btn btn-primary" onClick={save} disabled={saving}>
+              {saving ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── SIDEBAR ──────────────────────────────────────────────────────────────────
 const NAV = [
   { id: "dashboard", label: "Dashboard", icon: "dashboard" },
@@ -2063,7 +2135,7 @@ const NAV = [
   { id: "users", label: "Users", icon: "customer", adminOnly: true },
 ];
 
-function Sidebar({ page, setPage, user, onLogout }) {
+function Sidebar({ page, setPage, user, onLogout, onProfile }) {
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
@@ -2071,20 +2143,20 @@ function Sidebar({ page, setPage, user, onLogout }) {
       </div>
       <nav className="sidebar-nav">
         {NAV.filter(item => !item.adminOnly || user?.role === "admin").map(item => (
-  <div
-    key={item.id}
-    className={`nav-item ${page === item.id ? "active" : ""}`}
-    onClick={() => setPage(item.id)}
-  >
-    <Icon name={item.icon} size={15} />
-    {item.label}
-  </div>
-))}
+          <div
+            key={item.id}
+            className={`nav-item ${page === item.id ? "active" : ""}`}
+            onClick={() => setPage(item.id)}
+          >
+            <Icon name={item.icon} size={15} />
+            {item.label}
+          </div>
+        ))}
       </nav>
       <div className="sidebar-footer">
         <div className="user-badge">
           <div className="user-avatar">{user?.full_name?.[0] || "A"}</div>
-          <div className="user-info">
+          <div className="user-info" style={{ cursor: "pointer" }} onClick={onProfile}>
             <div className="user-name">{user?.full_name || "Admin"}</div>
             <div className="user-role">{user?.role || "admin"}</div>
           </div>
@@ -2121,6 +2193,7 @@ export default function App() {
     }
 });
   const [page, setPage] = useState("dashboard");
+  const [profileModal, setProfileModal] = useState(false);
 
   const handleLogin = (data) => setUser({ full_name: data.full_name, role: data.role });
   const handleLogout = async () => {
@@ -2153,7 +2226,14 @@ export default function App() {
     <>
       <style>{styles}</style>
       <div className="app">
-        <Sidebar page={page} setPage={setPage} user={user} onLogout={handleLogout} />
+        <Sidebar page={page} setPage={setPage} user={user} onLogout={handleLogout} onProfile={() => setProfileModal(true)} />
+{profileModal && (
+  <ProfileModal
+    user={user}
+    onClose={() => setProfileModal(false)}
+    onSaved={(newName) => setUser(u => ({ ...u, full_name: newName }))}
+  />
+)}
         <div className="main">
           <div className="topbar">
             <div className="page-title">{PAGE_TITLES[page]}</div>

@@ -2050,6 +2050,136 @@ function Settings() {
   );
 }
 
+// ── HELP & SUPPORT ───────────────────────────────────────────────────────────
+function HelpSupport() {
+  return (
+    <div>
+      <div className="page-header">
+        <div>
+          <div className="page-heading">Help & Support</div>
+          <div className="page-sub">User guide and contact information</div>
+        </div>
+      </div>
+
+      {/* ── Quick Start ── */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-header">
+          <div className="card-title">🚀 Quick Start Guide</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 16 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, marginBottom: 8, color: "var(--accent-light)" }}>1. Add Vehicles</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.7 }}>
+              Go to <strong style={{ color: "var(--text)" }}>Vehicles</strong> → click <strong style={{ color: "var(--text)" }}>+ Add Vehicle</strong>. 
+              Fill in the registration number, type, brand, model, daily rate and monthly rate. 
+              You can also import multiple vehicles at once using the <strong style={{ color: "var(--text)" }}>Import Excel</strong> button and the provided template.
+            </div>
+          </div>
+
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 16 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, marginBottom: 8, color: "var(--accent-light)" }}>2. Add Customers</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.7 }}>
+              Go to <strong style={{ color: "var(--text)" }}>Customers</strong> → click <strong style={{ color: "var(--text)" }}>+ Add Customer</strong>. 
+              The Customer Code field is used as the passport/ID number. 
+              Fill in nationality and driving license for rental agreements. 
+              You can also bulk import customers using the Excel template.
+            </div>
+          </div>
+
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 16 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, marginBottom: 8, color: "var(--accent-light)" }}>3. Create a Rental</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.7 }}>
+              Go to <strong style={{ color: "var(--text)" }}>Rentals</strong> → click <strong style={{ color: "var(--text)" }}>+ New Rental</strong>. 
+              Select the vehicle and customer, set the dates, deposit and down payment. 
+              The system automatically calculates the total amount including VAT. 
+              Click the invoice number to print the invoice PDF. 
+              Click the 📋 icon to print the rental agreement.
+            </div>
+          </div>
+
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 16 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, marginBottom: 8, color: "var(--accent-light)" }}>4. Record a Payment</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.7 }}>
+              Go to <strong style={{ color: "var(--text)" }}>Payments</strong> → click <strong style={{ color: "var(--text)" }}>+ Record Payment</strong>. 
+              Select the customer first, then choose their outstanding invoice. 
+              Enter the amount, payment method and date. 
+              Click the 🧾 icon in Payment History to print the receipt.
+            </div>
+          </div>
+
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 16 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 13, marginBottom: 8, color: "var(--accent-light)" }}>5. Process a Return</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.7 }}>
+              Go to <strong style={{ color: "var(--text)" }}>Returns</strong>. 
+              All active rentals are listed here. 
+              Click <strong style={{ color: "var(--text)" }}>Process Return</strong> on the rental being returned. 
+              Fill in the return date, termination type, returned KM and deposit returned.
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── Reports Guide ── */}
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="card-header">
+          <div className="card-title">📊 Reports Guide</div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 16 }}>
+            <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 6, color: "var(--text)" }}>🚗 Fleet Status</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.6 }}>Shows all vehicles with their current status, active rental details and balance due.</div>
+          </div>
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 16 }}>
+            <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 6, color: "var(--text)" }}>📈 Revenue Report</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.6 }}>Shows all payments received in a selected date range, grouped by payment method.</div>
+          </div>
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 16 }}>
+            <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 6, color: "var(--text)" }}>🧾 Sales Overview</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.6 }}>Shows all invoices issued in a selected date range with gross amount, VAT and net totals.</div>
+          </div>
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 16 }}>
+            <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 6, color: "var(--text)" }}>📊 All Balances</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.6 }}>Shows all customers with their total invoiced, total paid and outstanding balance.</div>
+          </div>
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 16, gridColumn: "1 / -1" }}>
+            <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 6, color: "var(--text)" }}>👤 Customer Balance Report</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 1.6 }}>Select a customer to see their total invoiced, paid and outstanding balance on screen. Use the PDF Statement button to generate a full transaction history for that customer.</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Contact Support ── */}
+      <div className="card">
+        <div className="card-header">
+          <div className="card-title">📞 Contact Support</div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16 }}>
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 20 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, marginBottom: 12, color: "var(--text)" }}>Business Easy Solutions</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 2 }}>
+              <div>📧 <a href="mailto:business_easy_solutions@outlook.com" style={{ color: "var(--accent-light)" }}>business_easy_solutions@outlook.com</a></div>
+              <div>🌐 Rental Management System v1.1</div>
+              <div>📍 Cyprus</div>
+            </div>
+          </div>
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: 20 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 15, marginBottom: 12, color: "var(--text)" }}>Support Hours</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", lineHeight: 2 }}>
+              <div>Monday — Friday: 09:00 — 18:00</div>
+              <div>Saturday: 09:00 — 13:00</div>
+              <div>Sunday: Closed</div>
+              <div style={{ marginTop: 8, color: "var(--accent-light)" }}>Response time: within 24 hours</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
 // ── PROFILE MODAL ────────────────────────────────────────────────────────────
 function ProfileModal({ user, onClose, onSaved }) {
   const [form, setForm] = useState({
@@ -2132,6 +2262,7 @@ const NAV = [
   { id: "payments", label: "Payments", icon: "payment" },
   { id: "reports", label: "Reports", icon: "report" },
   { id: "settings", label: "Settings", icon: "settings" },
+  { id: "help", label: "Help & Support", icon: "report" },
   { id: "users", label: "Users", icon: "customer", adminOnly: true },
 ];
 
@@ -2173,7 +2304,7 @@ function Sidebar({ page, setPage, user, onLogout, onProfile }) {
 const PAGE_TITLES = {
   dashboard: "Dashboard", vehicles: "Vehicles", customers: "Customers",
   rentals: "Rentals", returns: "Returns", payments: "Payments",
-  reports: "Reports", settings: "Settings", users: "User Management",
+  reports: "Reports", settings: "Settings", help: "Help & Support", users: "User Management",
 };
 
 export default function App() {
@@ -2246,7 +2377,7 @@ export default function App() {
     </>
   );
 
-  const pages = { dashboard: Dashboard, vehicles: Vehicles, customers: Customers, rentals: Rentals, returns: Returns, payments: Payments, reports: Reports, settings: Settings, users: Users };
+  const pages = { dashboard: Dashboard, vehicles: Vehicles, customers: Customers, rentals: Rentals, returns: Returns, payments: Payments, reports: Reports, settings: Settings, help: HelpSupport, users: Users };
   const PageComponent = pages[page] || Dashboard;
 
   return (

@@ -2192,24 +2192,41 @@ export default function App() {
         return null;
     }
 });
-  const [page, setPage] = useState("dashboard");
+const [page, setPage] = useState("dashboard");
   const [profileModal, setProfileModal] = useState(false);
+  const [licenseExpiry, setLicenseExpiry] = useState(null);
+
+  useEffect(() => {
+    api("/api/settings/").then(data => {
+      if (data.license_expiry) setLicenseExpiry(data.license_expiry);
+    }).catch(() => {});
+  }, []);
+
+  const getLicenseStatus = () => {
+    if (!licenseExpiry) return null;
+    const today = new Date();
+    const expiry = new Date(licenseExpiry);
+    const daysLeft = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+    if (daysLeft < 0) return { label: "License Expired!", color: "var(--danger)" };
+    if (daysLeft <= 30) return { label: `License expires in ${daysLeft} days`, color: "var(--warning)" };
+    return { label: `License valid until ${licenseExpiry}`, color: "var(--success)" };
+  };
 
   const handleLogin = (data) => setUser({ full_name: data.full_name, role: data.role });
   const handleLogout = async () => {
     try {
-        const token = localStorage.getItem("rms_token");
-        await fetch(`${API}/api/auth/logout`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${token}` }
-        });
+      const token = localStorage.getItem("rms_token");
+      await fetch(`${API}/api/auth/logout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
     } catch (err) {
-        // ignore errors on logout
+      // ignore errors on logout
     } finally {
-        localStorage.removeItem("rms_token");
-        setUser(null);
+      localStorage.removeItem("rms_token");
+      setUser(null);
     }
-};
+  };
 
   if (!user) return (
     <>
@@ -2227,17 +2244,30 @@ export default function App() {
       <style>{styles}</style>
       <div className="app">
         <Sidebar page={page} setPage={setPage} user={user} onLogout={handleLogout} onProfile={() => setProfileModal(true)} />
-{profileModal && (
-  <ProfileModal
-    user={user}
-    onClose={() => setProfileModal(false)}
-    onSaved={(newName) => setUser(u => ({ ...u, full_name: newName }))}
-  />
-)}
+        {profileModal && (
+          <ProfileModal
+            user={user}
+            onClose={() => setProfileModal(false)}
+            onSaved={(newName) => setUser(u => ({ ...u, full_name: newName }))}
+          />
+        )}
         <div className="main">
           <div className="topbar">
             <div className="page-title">{PAGE_TITLES[page]}</div>
-            <div className="topbar-actions">
+            <div className="topbar-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {getLicenseStatus() && (
+                <span style={{
+                  fontSize: 11,
+                  color: getLicenseStatus().color,
+                  fontFamily: "var(--font-mono)",
+                  padding: "3px 8px",
+                  borderRadius: "var(--radius)",
+                  border: `1px solid ${getLicenseStatus().color}`,
+                  opacity: 0.9
+                }}>
+                  {getLicenseStatus().label}
+                </span>
+              )}
               <span style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "var(--font-mono)" }}>RMS v1.1</span>
             </div>
           </div>

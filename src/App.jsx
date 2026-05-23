@@ -1971,11 +1971,11 @@ function Settings() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    api("/api/settings/").then(data => {
-      setSettings(data);
-      setForm(data);
-    }).catch(() => {});
-  }, []);
+  if (!user) return;
+  api("/api/settings/").then(data => {
+    if (data.license_expiry) setLicenseExpiry(data.license_expiry);
+  }).catch(() => {});
+}, [user]);
 
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 

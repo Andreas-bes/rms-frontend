@@ -1971,11 +1971,11 @@ function Settings() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-  if (!user) return;
-  api("/api/settings/").then(data => {
-    if (data.license_expiry) setLicenseExpiry(data.license_expiry);
-  }).catch(() => {});
-}, [user]);
+    api("/api/settings/").then(data => {
+      setSettings(data);
+      setForm(data);
+    }).catch(() => {});
+  }, []);
 
   const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
@@ -2004,7 +2004,6 @@ function Settings() {
           {saving ? "Saving…" : "Save Changes"}
         </button>
       </div>
-
       <div className="card">
         <div className="card-header"><div className="card-title">Company Information</div></div>
         <div className="form-grid">
@@ -2027,11 +2026,11 @@ function Settings() {
             </div>
           )}
           {form.address !== undefined && (
-              <div className="field form-full">
+            <div className="field form-full">
               <label>Company ID (Registration & VAT Number)</label>
               <input value={form.company_id || ""} onChange={f("company_id")} placeholder="REG: 12345 | VAT: CY12345678X" />
-           </div>
-)}
+            </div>
+          )}
           {form.phone !== undefined && (
             <div className="field">
               <label>Phone</label>
@@ -2049,7 +2048,6 @@ function Settings() {
     </div>
   );
 }
-
 // ── HELP & SUPPORT ───────────────────────────────────────────────────────────
 function HelpSupport() {
   return (

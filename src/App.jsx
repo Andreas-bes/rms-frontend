@@ -19,6 +19,13 @@ function api(path, opts = {}) {
   });
 }
 
+// ── DATE FORMAT ───────────────────────────────────────────────────────────────
+const fmtDate = (d) => {
+  if (!d) return "—";
+  const [y, m, day] = d.split("-");
+  return `${day}/${m}/${y}`;
+};
+
 // ── ICONS ────────────────────────────────────────────────────────────────────
 const Icon = ({ name, size = 16 }) => {
   const icons = {
@@ -433,8 +440,8 @@ function Dashboard() {
                     </span>
                   </td>
                   <td>Vehicle #{r.vehicle_id}</td>
-                  <td className="mono">{r.from_date}</td>
-                  <td className="mono">{r.until_date}</td>
+                  <td className="mono">{fmtDate(r.from_date)}</td>
+                  <td className="mono">{fmtDate(r.until_date)}</td>
                   <td>{r.num_days}</td>
                   <td><span className="amount">€{parseFloat(r.total_amount).toFixed(2)}</span></td>
                   <td><StatusBadge status={r.status} /></td>
@@ -916,7 +923,7 @@ function CustomerModal({ customer, onClose, onSaved }) {
     </div>
   );
 }
-// ── RENTALS ──────────────────────────────────────────────────────────────────
+
 // ── RENTALS ──────────────────────────────────────────────────────────────────
 function Rentals() {
   const [rentals, setRentals] = useState([]);
@@ -1275,8 +1282,19 @@ function Returns() {
   const [modal, setModal] = useState(null);
 
   const load = useCallback(() => {
-    api("/api/rentals/").then(r => {
-      setRentals(r.filter(x => x.status === "active"));
+    Promise.all([
+      api("/api/rentals/"),
+      api("/api/customers/"),
+      api("/api/vehicles/?active_only=false&available_only=false"),
+    ]).then(([rentalsData, customersData, vehiclesData]) => {
+      const active = rentalsData
+        .filter(x => x.status === "active")
+        .map(r => ({
+          ...r,
+          vehicle_reg: vehiclesData.find(v => v.id === r.vehicle_id)?.reg_no,
+          customer_name: customersData.find(c => c.id === r.customer_id)?.customer_code,
+        }));
+      setRentals(active);
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
@@ -1304,20 +1322,20 @@ function Returns() {
               <tbody>
                 {rentals.length === 0 && <tr><td colSpan={7}><div className="empty"><p>No active rentals</p></div></td></tr>}
                 {rentals.map(r => (
-                  <tr key={r.id}>
-                    <td><span className="mono text-accent">{r.invoice_no}</span></td>
-                    <td>Vehicle #{r.vehicle_id}</td>
-                    <td>Customer #{r.customer_id}</td>
-                    <td className="mono">{r.from_date}</td>
-                    <td className="mono">{r.until_date}</td>
-                    <td><span className="amount text-danger">€{parseFloat(r.balance).toFixed(2)}</span></td>
-                    <td>
-                      <button className="btn btn-primary btn-sm" onClick={() => setModal(r)}>
-                        <Icon name="return" size={12} /> Process Return
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+  <tr key={r.id}>
+    <td><span className="mono text-accent">{r.invoice_no}</span></td>
+    <td><span className="mono text-accent fw-bold">{r.vehicle_reg || `#${r.vehicle_id}`}</span></td>
+    <td>{r.customer_name || `#${r.customer_id}`}</td>
+    <td className="mono">{fmtDate(r.from_date)}</td>
+    <td className="mono">{fmtDate(r.until_date)}</td>
+    <td><span className={`amount ${parseFloat(r.balance) > 0 ? "text-danger" : "text-success"}`}>€{parseFloat(r.balance).toFixed(2)}</span></td>
+    <td>
+      <button className="btn btn-primary btn-sm" onClick={() => setModal(r)}>
+        <Icon name="return" size={12} /> Process Return
+      </button>
+    </td>
+  </tr>
+))}
               </tbody>
             </table>
           )}

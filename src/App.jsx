@@ -917,13 +917,25 @@ function CustomerModal({ customer, onClose, onSaved }) {
   );
 }
 // ── RENTALS ──────────────────────────────────────────────────────────────────
+// ── RENTALS ──────────────────────────────────────────────────────────────────
 function Rentals() {
   const [rentals, setRentals] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
+  const [editModal, setEditModal] = useState(null);
 
   const load = useCallback(() => {
-    api("/api/rentals/").then(setRentals).catch(() => {}).finally(() => setLoading(false));
+    Promise.all([
+      api("/api/rentals/"),
+      api("/api/customers/"),
+      api("/api/vehicles/?active_only=false&available_only=false"),
+    ]).then(([rentalsData, customersData, vehiclesData]) => {
+      setRentals(rentalsData);
+      setCustomers(customersData);
+      setVehicles(vehiclesData);
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -993,8 +1005,8 @@ function Rentals() {
                         {r.invoice_no}
                       </span>
                     </td>
-                    <td>#{r.customer_id}</td>
-                    <td>#{r.vehicle_id}</td>
+                    <td>{customers.find(c => c.id === r.customer_id)?.full_name || `#${r.customer_id}`}</td>
+                    <td>{vehicles.find(v => v.id === r.vehicle_id)?.reg_no || `#${r.vehicle_id}`}</td>
                     <td className="mono">{r.from_date}</td>
                     <td className="mono">{r.until_date}</td>
                     <td>{r.num_days}</td>
@@ -1002,13 +1014,24 @@ function Rentals() {
                     <td><span className={`amount ${parseFloat(r.balance) > 0 ? "text-danger" : "text-success"}`}>€{parseFloat(r.balance).toFixed(2)}</span></td>
                     <td><StatusBadge status={r.status} /></td>
                     <td>
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        onClick={() => openAgreementPdf(r.id)}
-                        title="Print Agreement"
-                      >
-                        📋
-                      </button>
+                      <div className="actions">
+                        {r.status === "active" && (
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => setEditModal(r)}
+                            title="Edit Rental"
+                          >
+                            <Icon name="edit" size={12} />
+                          </button>
+                        )}
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          onClick={() => openAgreementPdf(r.id)}
+                          title="Print Agreement"
+                        >
+                          📋
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1022,6 +1045,16 @@ function Rentals() {
         <RentalModal
           onClose={() => setModal(false)}
           onSaved={() => { setModal(false); load(); toast("Rental created!"); }}
+        />
+      )}
+
+      {editModal && (
+        <RentalEditModal
+          rental={editModal}
+          customers={customers}
+          vehicles={vehicles}
+          onClose={() => setEditModal(null)}
+          onSaved={() => { setEditModal(null); load(); toast("Rental updated!"); }}
         />
       )}
     </div>
@@ -1132,7 +1165,109 @@ function RentalModal({ onClose, onSaved }) {
     </div>
   );
 }
+function RentalEditModal({ rental, customers, vehicles, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    customer_id: rental.customer_id,
+    vehicle_id: rental.vehicle_id,
+    until_date: rental.until_date,
+    rate_type: rental.rate_type || "daily",
+  });
+  const [saving, setSaving] = useState(false);
+  const f = (k) => (e) => setForm(p => ({ ...p, [k]: e.target.value }));
 
+  // Available vehicles = available ones + the currently assigned one
+  const availableVehicles = vehicles.filter(v => v.status === "available" || v.id === rental.vehicle_id);
+
+  const save = async () => {
+    if (!form.until_date) { toast("Until date is required", "error"); return; }
+    setSaving(true);
+    try {
+      await api(`/api/rentals/${rental.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          customer_id: parseInt(form.customer_id),
+          vehicle_id: parseInt(form.vehicle_id),
+          until_date: form.until_date,
+          rate_type: form.rate_type,
+        }),
+      });
+      onSaved();
+    } catch (err) {
+      toast(err.message, "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-header">
+          <div className="modal-title">Edit Rental</div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}><Icon name="close" size={14} /></button>
+        </div>
+        <div className="modal-body">
+
+          {/* Locked fields */}
+          <div style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "12px 16px", marginBottom: 20, display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12 }}>
+            <div>
+              <div className="text-dim" style={{ fontSize: 11, marginBottom: 4, letterSpacing: "0.08em", textTransform: "uppercase" }}>Invoice (locked)</div>
+              <div className="mono text-accent fw-bold">{rental.invoice_no}</div>
+            </div>
+            <div>
+              <div className="text-dim" style={{ fontSize: 11, marginBottom: 4, letterSpacing: "0.08em", textTransform: "uppercase" }}>From Date (locked)</div>
+              <div className="mono">{rental.from_date}</div>
+            </div>
+          </div>
+
+          {/* Editable fields */}
+          <div className="form-grid">
+            <div className="field">
+              <label>Customer *</label>
+              <select value={form.customer_id} onChange={f("customer_id")}>
+                {customers.map(c => (
+                  <option key={c.id} value={c.id}>{c.customer_code} — {c.full_name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label>Vehicle *</label>
+              <select value={form.vehicle_id} onChange={f("vehicle_id")}>
+                {availableVehicles.map(v => (
+                  <option key={v.id} value={v.id}>
+                    {v.reg_no} — {v.brand} {v.model}{v.id === rental.vehicle_id ? " (current)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label>Until Date *</label>
+              <input type="date" value={form.until_date} onChange={f("until_date")} min={rental.from_date} />
+            </div>
+            <div className="field">
+              <label>Rate Type</label>
+              <select value={form.rate_type} onChange={f("rate_type")}>
+                <option value="daily">Daily</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 16, padding: "10px 14px", background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)", borderRadius: "var(--radius)", fontSize: 12, color: "var(--silver)" }}>
+            ℹ️ Changing the vehicle or rate type will automatically recalculate the total and balance.
+          </div>
+
+          <div className="modal-footer">
+            <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+            <button className="btn btn-primary" onClick={save} disabled={saving}>
+              {saving ? "Saving…" : "Update Rental"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 // ── RETURNS ──────────────────────────────────────────────────────────────────
 function Returns() {
   const [rentals, setRentals] = useState([]);

@@ -340,6 +340,7 @@ function Login({ onLogin }) {
 function Dashboard() {
   const [stats, setStats] = useState(null);
   const [rentals, setRentals] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
 
@@ -359,17 +360,18 @@ function Dashboard() {
 
   useEffect(() => {
     Promise.all([
-      api("/api/vehicles/?active_only=false&available_only=false"),
-      api("/api/rentals/"),
-      api("/api/customers/"),
-    ]).then(([vehicles, rentals, customers]) => {
-      const active = rentals.filter(r => r.status === "active");
-      const available = vehicles.filter(v => v.status === "available");
-      const totalRevenue = rentals.reduce((s, r) => s + parseFloat(r.total_amount || 0), 0);
-      setStats({ vehicles: vehicles.length, available: available.length, activeRentals: active.length, customers: customers.length, totalRevenue });
-      setRentals(rentals);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+  api("/api/vehicles/?active_only=false&available_only=false"),
+  api("/api/rentals/"),
+  api("/api/customers/"),
+]).then(([vehiclesData, rentalsData, customers]) => {
+  const active = rentalsData.filter(r => r.status === "active");
+  const available = vehiclesData.filter(v => v.status === "available");
+  const totalRevenue = rentalsData.reduce((s, r) => s + parseFloat(r.total_amount || 0), 0);
+  setStats({ vehicles: vehiclesData.length, available: available.length, activeRentals: active.length, customers: customers.length, totalRevenue });
+  setVehicles(vehiclesData);
+  setRentals(rentalsData);
+  setLoading(false);
+}).catch(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="empty"><p>Loading dashboard…</p></div>;
@@ -439,7 +441,7 @@ function Dashboard() {
                       {r.invoice_no}
                     </span>
                   </td>
-                  <td>Vehicle #{r.vehicle_id}</td>
+                  <td><span className="mono text-accent fw-bold">{vehicles.find(v => v.id === r.vehicle_id)?.reg_no || `#${r.vehicle_id}`}</span></td>
                   <td className="mono">{fmtDate(r.from_date)}</td>
                   <td className="mono">{fmtDate(r.until_date)}</td>
                   <td>{r.num_days}</td>
